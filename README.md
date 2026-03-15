@@ -1,4 +1,4 @@
-# Real-time Chat Application
+# PAHIGAL - Real-time Chat Application
 
 This is a simple real-time chat application built with React, TypeScript, Vite, and a Node.js backend with WebSockets.
 
