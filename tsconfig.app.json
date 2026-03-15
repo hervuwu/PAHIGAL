@@ -5,7 +5,8 @@
     "useDefineForClassFields": true,
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "module": "ESNext",
-    "types": ["vite/client"],
+    /* 1. Added vitest/globals and node here */
+    "types": ["vite/client", "vitest/globals", "node"],
     "skipLibCheck": true,
 
     /* Bundler mode */
@@ -24,5 +25,11 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src"]
+  "include": ["src"],
+  /* 2. Exclude test files so the BUILD doesn't try to compile them */
+  "exclude": [
+    "src/**/*.test.tsx",
+    "src/**/*.spec.tsx",
+    "src/setupTests.ts"
+  ]
 }
