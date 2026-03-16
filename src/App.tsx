@@ -2,8 +2,9 @@ import { useState, useEffect, useRef } from "react";
 import { Github } from "lucide-react";
 import "./App.css";
 
-const URL = "wss://pahigal-backshot.onrender.com";
-// const URL = import.meta.env.VITE_WS_URL || "ws://localhost:8080";
+const URL = import.meta.env.PROD 
+  ? "wss://pahigal-backshot.onrender.com" 
+  : "ws://localhost:8080";
 
 type Message = {
   text: string;
