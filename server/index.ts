@@ -6,52 +6,67 @@ const app = express();
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 
+// --- CONFIG & STATE ---
 interface User {
   ws: WebSocket;
   username: string;
 }
 
-let waitingUser: User | null = null;
-// Use a Map to track active chat pairs
+const cooldowns = new Map<string, number>();
 const partners = new Map<WebSocket, { ws: WebSocket; username: string }>();
+let waitingUser: User | null = null;
 
-wss.on('connection', (ws) => {
-  console.log('Client connected');
+const COOLDOWN_TIME = 5000; // 5 seconds
+
+wss.on('connection', (ws, req) => {
+  const ip = req.socket.remoteAddress || 'unknown';
+  const now = Date.now();
+
+  // 1. RATE LIMITING
+  if (cooldowns.has(ip)) {
+    const lastActive = cooldowns.get(ip)!;
+    if (now - lastActive < COOLDOWN_TIME) {
+      console.log(`Rate limit hit for ${ip}`);
+      ws.send(JSON.stringify({ 
+        type: 'error', 
+        message: 'Please wait a few seconds before looking for a new match.' 
+      }));
+      ws.close();
+      return;
+    }
+  }
+
+  cooldowns.set(ip, now);
+  console.log(`Client connected: ${ip}`);
 
   ws.on('message', (data) => {
     let message;
     try {
       message = JSON.parse(data.toString());
-    } catch (e) { 
-      return; 
-    }
+    } catch (e) { return; }
 
-    // 1. RELAY LOGIC: If this user already has a partner, relay the message and STOP.
+    // 2. RELAY LOGIC (Typing & Messages)
     const myPartner = partners.get(ws);
     if (myPartner && myPartner.ws.readyState === WebSocket.OPEN) {
-      myPartner.ws.send(data.toString());
-      return; // This return prevents the matching logic below from firing during a chat.
+        // This relays everything (text, timestamps, typing status) to the partner
+        myPartner.ws.send(data.toString());
+        return;
     }
 
-    // 2. MATCHING LOGIC: Only runs if the user is not in a chat.
+    // 3. MATCHING LOGIC
     if (message.username) {
       if (!waitingUser) {
-        // First user arrives, put them in the waiting room.
         waitingUser = { ws, username: message.username };
         ws.send(JSON.stringify({ type: 'waiting' }));
-        console.log(`${message.username} is waiting...`);
       } else if (waitingUser.ws !== ws) {
-        // Second user arrives, pair them with the waiting user.
         const partner = waitingUser;
         waitingUser = null;
 
         console.log(`Matching ${message.username} with ${partner.username}`);
 
-        // Establish the link in BOTH directions in the Map.
         partners.set(ws, { ws: partner.ws, username: partner.username });
         partners.set(partner.ws, { ws: ws, username: message.username });
 
-        // Notify both clients of the match.
         ws.send(JSON.stringify({ type: 'match', partnerName: partner.username }));
         partner.ws.send(JSON.stringify({ type: 'match', partnerName: message.username }));
       }
@@ -61,20 +76,15 @@ wss.on('connection', (ws) => {
   ws.on('close', () => {
     console.log('Client disconnected');
     
-    // Clean up if the user was the one waiting.
     if (waitingUser?.ws === ws) {
       waitingUser = null;
     }
 
-    // If the user was in a chat, notify their partner.
     const p = partners.get(ws);
     if (p && p.ws.readyState === WebSocket.OPEN) {
       p.ws.send(JSON.stringify({ type: 'partner-disconnected' }));
-      // Remove the partner's link to the disconnected user.
       partners.delete(p.ws);
     }
-    
-    // Remove the disconnected user from the Map.
     partners.delete(ws);
   });
 });
