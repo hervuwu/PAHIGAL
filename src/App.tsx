@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import "./App.css";
 
-const URL = "ws://localhost:8080"; // Remember to change to wss://your-render-url.onrender.com for production
+const URL = "wss://pahigal-backshot.onrender.com";
 
 type Message = {
   text: string;
