@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { Github } from "lucide-react";
 import "./App.css";
 
+// If Vercel is building the app, use the Render link.
+// If you are running 'npm run dev' on your computer, use localhost.
 const URL = import.meta.env.PROD 
   ? "wss://pahigal-backshot.onrender.com" 
   : "ws://localhost:8080";
@@ -33,6 +35,9 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [isServerWaking, setIsServerWaking] = useState(false);
   const [reconnectAttempts, setReconnectAttempts] = useState(0);
+  
+  // New State for the Server Wake-Up Countdown
+  const [countdown, setCountdown] = useState(50);
 
   const ws = useRef<WebSocket | null>(null);
   const isConnecting = useRef(false);
@@ -65,6 +70,7 @@ function App() {
     scrollToBottom();
   }, [messages, isPartnerTyping]);
 
+  // --- Aesthetic Variables Setup ---
   useEffect(() => {
     const aestheticPalettes = [
       {
@@ -141,6 +147,19 @@ function App() {
     );
   }, []);
 
+  // --- Countdown Timer Logic ---
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isServerWaking) {
+      setCountdown(50); // Reset to 50 when starting
+      interval = setInterval(() => {
+        setCountdown((prev) => (prev > 0 ? prev - 1 : 0));
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isServerWaking]);
+
+  // --- WebSocket Connection ---
   const connect = () => {
     if (ws.current?.readyState === WebSocket.OPEN || isConnecting.current)
       return;
@@ -332,7 +351,6 @@ function App() {
         </div>
       )}
 
-      {/* FIXED: Toggle button only shows when not in a chat screen */}
       {(status === "UNSET" || status === "WAITING") && (
         <button
           className="theme-toggle top-right"
@@ -367,7 +385,6 @@ function App() {
               Find Someone
             </button>
           </form>
-          {/* Footer Repo Link */}
           <footer className="footer-link">
             <a
               href="https://github.com/hervuwu/PAHIGAL"
@@ -387,10 +404,11 @@ function App() {
           <h1 className="brand-logo" style={{ fontSize: "2rem" }}>
             {isServerWaking ? "Waking up Server..." : "Searching..."}
           </h1>
+          {/* INJECTED LIVE COUNTDOWN HERE */}
           <p>
             {isServerWaking
-              ? "Render's free tier is spinning up. This can take up to 50 seconds. Hang tight! 🍑"
-              : "Looking for a Pahigal for you."}
+              ? `The free server was taking a nap. Give it ${countdown}s to wake up and stretch! 🥵🍑`
+              : "Looking for someone to match your freak... 👀🔥"}
           </p>
           <button
             className="new-match-btn"
