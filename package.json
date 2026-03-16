@@ -1,10 +1,10 @@
 {
   "scripts": {
-  "dev": "vite",
-  "build": "vite build",
-  "start:server": "nodemon --watch server/**/*.ts --exec npx ts-node server/index.ts",
-  "start": "tsx server/index.ts" 
-}
+    "dev": "vite",
+    "build": "vite build",
+    "start:server": "nodemon --watch server/**/*.ts --exec npx ts-node server/index.ts",
+    "start": "tsx server/index.ts"
+  },
   "devDependencies": {
     "@types/express": "^5.0.6",
     "@types/react": "^19.2.14",
