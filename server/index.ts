@@ -12,6 +12,10 @@ interface User {
   username: string;
 }
 
+app.get('/', (req, res) => {
+  res.status(200).send('PAHIGAL Backend is awake! 🍑💦');
+});
+
 const cooldowns = new Map<string, number>();
 const partners = new Map<WebSocket, { ws: WebSocket; username: string }>();
 let waitingUser: User | null = null;
