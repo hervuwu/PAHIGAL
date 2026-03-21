@@ -1,211 +1,184 @@
-# PAHIGAL - Real-time Chat Application 🍑
+# PAHIGAL - Real-Time Chat Application
 
-**PAHIGAL** is a high-performance, real-time random matchmaking chat
-application. Inspired by a reverse-engineering of "Pahungaw Tech"---a
-defunct matchmaking platform originally based in a Cebu
-university---this project modernizes the experience with a sleek
-geometric aesthetic, dynamic visual design, and a robust technical
-architecture.
+**PAHIGAL** is a high-performance, real-time random matchmaking chat application. Inspired by the architecture of localized university matchmaking platforms, this project modernizes the anonymous chat experience with a scalable WebSockets backend, a responsive React frontend, and a highly extensible design system.
 
-------------------------------------------------------------------------
-
-## 🎨 Make It Yours (Open for Modification)
-
-PAHIGAL is built to be a foundation, not just a final product. Whether
-you are a student developer in Cebu or someone looking to experiment
-with WebSockets, you are encouraged to fork and modify this project:
-
--   **Modify the Logic:** Re-engineer the matchmaking algorithm to suit
-    your specific community needs.
--   **Redesign the UI:** Use the existing CSS variable system to create
-    entirely new themes beyond Dark and Light mode.
--   **Extend Features:** Add your own creative touches, like file
-    sharing, voice notes, or custom emoji reactions.
-
-------------------------------------------------------------------------
+---
 
 ## 🚀 Key Features
 
-### Anonymous Matchmaking
+**Anonymous Matchmaking**
+Instant, secure connections utilizing a low-latency WebSocket pairing system.
 
-Instantly connects two random users through a secure, Map-based
-WebSocket pairing system.
+**Real-Time Communication**
+Bi-directional event handling powered by Node.js and the `ws` library.
 
-### Real-time Communication
+**Dynamic Theming Engine**
+A custom React hook that procedurally generates unique gradient palettes and subtle overlay patterns (e.g., grids, CRT scanlines) on every session load.
 
-Low-latency messaging built with **Node.js** and the **ws** library.
+**Modern Interface**
+A responsive, accessible UI leveraging CSS glassmorphism, Google Sans for display elements, and Montserrat for body typography.
 
-### Dynamic Jewel-Tone UI
+**Robust Session Management**
+Integrated event guards, lock references, and cooldown mechanisms to eliminate accidental triggers, state-looping, and UI spamming.
 
-Features a custom React hook that mathematically randomizes deep,
-vibrant gradient palettes and subtle CSS overlay patterns (like
-blueprint grids or CRT scanlines) on every load for a fresh aesthetic.
+---
 
-### Modern Typography & Glassmorphism
+## 🧠 Architecture & Technical Highlights
 
-A responsive interface utilizing **Google Sans** for displays,
-**Montserrat** for body text, and semi-transparent glassmorphism layers.
+### O(1) Map-Based Pairing
 
-### Native Dark/Light Mode
+The backend leverages JavaScript `Map` objects to track active partnerships. Instead of iterating through arrays of users to resolve matches or handle disconnections, the server accesses pairing data instantly via unique socket IDs, ensuring **O(1)** time complexity even under heavy concurrent load.
 
-Fully optimized for eye comfort with rich, low-light emission colors by
-default.
+### React State Integrity & Race Conditions
 
-### Session Guarding
+The frontend utilizes `useRef` hooks (`statusRef` and `isConnecting`) to manage WebSocket connection lifecycles synchronously. This bypasses React's asynchronous state batching, instantly blocking duplicate connection attempts and preventing infinite auto-reconnect loops when a user intentionally terminates a session.
 
-Integrated event guards, lock references (`isConnecting`), and cooldowns
-to eliminate accidental triggers, state-looping, or UI spamming.
+### Event Propagation Isolation
 
-------------------------------------------------------------------------
+UI components utilize CSS `isolate` and JavaScript `e.stopPropagation()` to strictly manage stacking contexts and prevent event bleeding across the DOM during rapid user interactions.
 
-## 🛠️ Tech Stack (Monorepo)
+---
 
-**Frontend** - React 19 - TypeScript - Vite
+## 🛠️ Tech Stack
 
-**Backend** - Node.js - Express - WebSocket (`ws`) - `tsx` compiler
+This project is structured as a monorepo containing both the client and server applications.
 
-**Styling** - Native CSS3 - CSS Custom Properties (Variables)
+### Frontend
 
-**Deployment** - Vercel (Frontend) - Render (Backend)
+* React 19
+* TypeScript
+* Vite
+* Native CSS3 & CSS Custom Properties
 
-------------------------------------------------------------------------
+### Backend
 
-## 📦 Installation & Local Setup
+* Node.js
+* Express
+* WebSocket (`ws`)
+* tsx compiler
 
-### 1. Clone and Install
+### Infrastructure
 
-``` bash
+* Vercel (Frontend Hosting)
+* Render (Backend Hosting)
+
+---
+
+## 📦 Local Development Setup
+
+### 1. Clone the Repository
+
+```bash
 git clone https://github.com/hervuwu/PAHIGAL.git
 cd PAHIGAL
 npm install
 ```
 
-### 2. Running Locally
+### 2. Run the Application
 
-Because this is a monorepo, you will need **two terminal windows open.**
+Because this is a monorepo, you must run the client and server concurrently in separate terminal instances.
 
-#### Terminal 1: Start the Backend Server
+**Terminal 1: Start the Backend Server**
 
-``` bash
+```bash
 npm run start:server
 ```
 
-The server will listen on:
+The server will initialize and listen on:
 
-    ws://localhost:8080
+```
+ws://localhost:8080
+```
 
-#### Terminal 2: Start the Frontend UI
+**Terminal 2: Start the Frontend UI**
 
-``` bash
+```bash
 npm run dev
 ```
 
-------------------------------------------------------------------------
+The Vite development server will start and provide a local localhost URL.
 
-## 🌐 Public Deployment Guide
+---
 
-This project is configured to be deployed as **two separate services**
-from a single GitHub repository.
+## 🌐 Deployment Guide
+
+This repository is configured to be deployed as two separate services.
 
 ### 1. Backend (Render)
 
-**Service:** Deploy the repository as a **Web Service** on Render.
+Deploy the repository as a **Web Service** on Render.
 
 **Build Command**
 
-``` bash
+```bash
 npm install
 ```
 
 **Start Command**
 
-``` bash
+```bash
 npm run start
 ```
 
-This triggers:
+(This triggers `tsx server/index.ts`)
 
-    tsx server/index.ts
+**Note:** Render automatically handles port binding via `process.env.PORT`.
 
-**Note:** Render handles `process.env.PORT` automatically.
-
-After deployment, copy your live URL:
-
-    pahigal-backshot.onrender.com
-
-------------------------------------------------------------------------
+---
 
 ### 2. Frontend (Vercel)
 
-**Service:** Import the repository into **Vercel**.
+Import the repository into Vercel.
 
-#### Environment Variables (CRITICAL)
+#### Environment Variables Configuration
 
-Before building, you must add your Render backend URL so **Vite can bake
-it into the production code.**
+Before initializing the build, you must provide your Render backend URL so Vite can inject it into the production bundle.
 
-  Key             Value
-  --------------- --------------------------------------
-  `VITE_WS_URL`   `wss://your-render-url.onrender.com`
+| Key         | Value                               |
+| ----------- | ----------------------------------- |
+| VITE_WS_URL | wss://pahigal-backshot.onrender.com |
 
-⚠️ **Important:** Ensure you use **`wss://`** for secure WebSockets.
-
-#### Build Configuration
+Ensure you use the secure **wss://** protocol.
 
 **Build Command**
 
-``` bash
+```bash
 npm run build
 ```
 
 **Output Directory**
 
-    dist
- 
-------------------------------------------------------------------------
+```
+dist
+```
 
-## ⚠️ Deployment Trap
+---
 
-If your **Vercel site hangs on "Waking up Server..." on mobile**, it
-means **Vite did not detect the `VITE_WS_URL` during the build** and
-fell back to `localhost`.
+## ⚠️ Troubleshooting
 
-To fix this:
+**Issue:** The deployed application hangs on "Waking up Server..." on mobile devices.
 
-1.  Add the environment variable in **Vercel Project Settings**
-2.  Trigger a **manual redeploy**
-3.  The correct WebSocket URL will be baked into the production build
+**Cause:**
+Vite failed to detect the `VITE_WS_URL` environment variable during the build process and has fallen back to standard localhost.
 
-------------------------------------------------------------------------
+**Resolution:**
 
-## 🔧 Technical Deep Dive
+1. Navigate to your Vercel Project Settings → Environment Variables.
+2. Ensure `VITE_WS_URL` is correctly set for the Production environment.
+3. Trigger a manual redeployment to bake the variable into the new build.
 
-### O(1) Map-Based Pairing
+---
 
-The backend utilizes a **JavaScript `Map`** to track active
-partnerships.
+## 🤝 Extensibility & Customization
 
-Instead of iterating through arrays of users to find matches or
-disconnections, the server accesses pairing data instantly via unique
-socket IDs, ensuring **O(1) time complexity** even under heavy load.
+PAHIGAL is designed as an unopinionated foundation. Developers are encouraged to fork and extend the architecture:
 
-------------------------------------------------------------------------
+* **Algorithm Modification:** Re-engineer the backend matchmaking logic to support localized routing or specific community parameters.
+* **UI Overhauls:** Utilize the existing CSS variable system to implement entirely new visual themes beyond standard Light/Dark modes.
+* **Feature Expansion:** Integrate media sharing, voice notes, or custom WebSocket payloads (e.g., typing indicators, message reactions).
 
-### React State Integrity & Race Conditions
+---
 
-The frontend utilizes **`useRef` hooks (`statusRef` and
-`isConnecting`)** to manage WebSocket connection lifecycles.
+## 📄 License
 
-This bypasses React's asynchronous state batching, instantly blocking
-duplicate connection attempts and preventing **infinite auto-reconnect
-loops** when a user intentionally drops a chat.
-
-------------------------------------------------------------------------
-
-### Event Propagation Isolation
-
-UI buttons use **CSS `isolate`** and JavaScript
-**`e.stopPropagation()`** to strictly manage stacking contexts and
-prevent **event bleeding across the DOM.**
-
-------------------------------------------------------------------------
+This project is open-source and available for modification and distribution.
